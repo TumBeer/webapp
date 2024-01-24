@@ -198,7 +198,7 @@ wss.on('connection', function connection(ws) {
 
 
 
-const PORT = 3000;
-server.listen(PORT, () => console.log(`Lisening on port :3000`))
+const PORT = 3264;
+server.listen(PORT, () => console.log("Lisening on port : ", PORT))
 
 
