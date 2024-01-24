@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const server = require('http').createServer(app);
 const WebSocket = require('ws');
-// const mysql = require("mysql2");
+const mysql = require("mysql2");
 const cors = require("cors");
 const path = require('path');
 
@@ -19,81 +19,81 @@ app.get('/', (req, res) => {
 
 const wss = new WebSocket.Server({ server:server });
 
-// const db = mysql.createConnection({
-//   user: "root",
-//   host: "localhost",
-//   password: "setkit",
-//   database: "sensor_data",
-// });
+const db = mysql.createConnection({
+  user: "root",
+  host: "localhost",
+  password: "setkit",
+  database: "sensor_data",
+});
 
 // const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
-// const insertData = (temperature, voltage) => {
+const insertData = (temperature, voltage) => {
 
-//   const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
-//   db.query(insertQuery, [temperature, voltage], (err, results) => {
-//     if (err) {
-//       console.error('Error inserting data:', err);
-//       return;
-//     }
-//     console.log('Data inserted successfully, insertId =', results.insertId);
-//   });
-// };
+  const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
+  db.query(insertQuery, [temperature, voltage], (err, results) => {
+    if (err) {
+      console.error('Error inserting data:', err);
+      return;
+    }
+    console.log('Data inserted successfully, insertId =', results.insertId);
+  });
+};
 
-// app.get("/dataAmount", (req, res) => {
-//   db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
-//     if (err) {
-//       console.log('Error connecting to MySQL database:', err);
-//       res.sendStatus(500); // Send Internal Server Error status
-//     } else {
-//       // Check if there is any result
-//       if (result.length > 0) {
-//         res.send(result);
-//       } else {
-//         res.sendStatus(404); // Send Not Found status
-//       }
-//     }
-//     dataCount = result[0]['COUNT(*)']
-//     console.log(dataCount);
-//   });
-// });
+app.get("/dataAmount", (req, res) => {
+  db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
+    if (err) {
+      console.log('Error connecting to MySQL database:', err);
+      res.sendStatus(500); // Send Internal Server Error status
+    } else {
+      // Check if there is any result
+      if (result.length > 0) {
+        res.send(result);
+      } else {
+        res.sendStatus(404); // Send Not Found status
+      }
+    }
+    dataCount = result[0]['COUNT(*)']
+    console.log(dataCount);
+  });
+});
 
-// app.get("/data50", (req, res) => {
-//   db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
-//     if (err) {
-//       console.log('Error connecting to MySQL database:', err);
-//       res.sendStatus(500); // Send Internal Server Error status
-//     } else {
-//       // Check if there is any result
-//       if (result.length > 0) {
-//         res.send(result);
-//       } else {
-//         res.sendStatus(404); // Send Not Found status
-//       }
-//     }
-//     console.log('Connected to MySQL database');
-//     console.log("50 Data: ", result);
-//   });
-// });
+app.get("/data50", (req, res) => {
+  db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
+    if (err) {
+      console.log('Error connecting to MySQL database:', err);
+      res.sendStatus(500); // Send Internal Server Error status
+    } else {
+      // Check if there is any result
+      if (result.length > 0) {
+        res.send(result);
+      } else {
+        res.sendStatus(404); // Send Not Found status
+      }
+    }
+    console.log('Connected to MySQL database');
+    console.log("50 Data: ", result);
+  });
+});
 
-// app.delete("/delete", (req, res) => {
-//   db.query("DELETE FROM sensor", (err, result) => {
-//     if (err) {
-//       console.log(err);
-//       res.status(500).send("Internal Server Error");
-//     } else {
-//       res.send(result);
-//     }
-//   });
-// });
+app.delete("/delete", (req, res) => {
+  db.query("DELETE FROM sensor", (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Internal Server Error");
+    } else {
+      res.send(result);
+    }
+  });
+});
 
 
 
-// // Handle Ctrl+C to close the database connection before exiting
-// process.on('SIGINT', () => {
-//   connection.end();
-//   console.log('Disconnected from MySQL database');
-//   process.exit();
-// });
+// Handle Ctrl+C to close the database connection before exiting
+process.on('SIGINT', () => {
+  connection.end();
+  console.log('Disconnected from MySQL database');
+  process.exit();
+});
 
 let onoff = true;
 
@@ -163,7 +163,7 @@ wss.on('connection', function connection(ws) {
       temperature = parsedMessage.temperature;
       voltage = parsedMessage.voltage;
       // console.log('Parsed Value:', 'Temperature: ', temperature, 'Voltage: ', voltage);
-      // insertData(temperature, voltage);
+      insertData(temperature, voltage);
     } catch (error) {
       console.error('Error Parsing Message:', error);
       return; // Return early to avoid sending an undefined value
@@ -198,7 +198,7 @@ wss.on('connection', function connection(ws) {
 
 
 
-
-server.listen(3000, () => console.log(`Lisening on port :3000`))
+const PORT = 3000;
+server.listen(PORT, 'websocket-v2jj.onrender.com', () => console.log(`Lisening on port :3000`))
 
 
