@@ -19,81 +19,81 @@ app.get('/', (req, res) => {
 
 const wss = new WebSocket.Server({ server:server });
 
-const db = mysql.createConnection({
-  user: "root",
-  host: "localhost",
-  password: "setkit",
-  database: "sensor_data",
-});
+// const db = mysql.createConnection({
+//   user: "root",
+//   host: "localhost",
+//   password: "setkit",
+//   database: "sensor_data",
+// });
 
-// const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
-const insertData = (temperature, voltage) => {
+// // const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
+// const insertData = (temperature, voltage) => {
 
-  const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
-  db.query(insertQuery, [temperature, voltage], (err, results) => {
-    if (err) {
-      console.error('Error inserting data:', err);
-      return;
-    }
-    console.log('Data inserted successfully, insertId =', results.insertId);
-  });
-};
+//   const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
+//   db.query(insertQuery, [temperature, voltage], (err, results) => {
+//     if (err) {
+//       console.error('Error inserting data:', err);
+//       return;
+//     }
+//     console.log('Data inserted successfully, insertId =', results.insertId);
+//   });
+// };
 
-app.get("/dataAmount", (req, res) => {
-  db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
-    if (err) {
-      console.log('Error connecting to MySQL database:', err);
-      res.sendStatus(500); // Send Internal Server Error status
-    } else {
-      // Check if there is any result
-      if (result.length > 0) {
-        res.send(result);
-      } else {
-        res.sendStatus(404); // Send Not Found status
-      }
-    }
-    dataCount = result[0]['COUNT(*)']
-    console.log(dataCount);
-  });
-});
+// app.get("/dataAmount", (req, res) => {
+//   db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
+//     if (err) {
+//       console.log('Error connecting to MySQL database:', err);
+//       res.sendStatus(500); // Send Internal Server Error status
+//     } else {
+//       // Check if there is any result
+//       if (result.length > 0) {
+//         res.send(result);
+//       } else {
+//         res.sendStatus(404); // Send Not Found status
+//       }
+//     }
+//     dataCount = result[0]['COUNT(*)']
+//     console.log(dataCount);
+//   });
+// });
 
-app.get("/data50", (req, res) => {
-  db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
-    if (err) {
-      console.log('Error connecting to MySQL database:', err);
-      res.sendStatus(500); // Send Internal Server Error status
-    } else {
-      // Check if there is any result
-      if (result.length > 0) {
-        res.send(result);
-      } else {
-        res.sendStatus(404); // Send Not Found status
-      }
-    }
-    console.log('Connected to MySQL database');
-    console.log("50 Data: ", result);
-  });
-});
+// app.get("/data50", (req, res) => {
+//   db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
+//     if (err) {
+//       console.log('Error connecting to MySQL database:', err);
+//       res.sendStatus(500); // Send Internal Server Error status
+//     } else {
+//       // Check if there is any result
+//       if (result.length > 0) {
+//         res.send(result);
+//       } else {
+//         res.sendStatus(404); // Send Not Found status
+//       }
+//     }
+//     console.log('Connected to MySQL database');
+//     console.log("50 Data: ", result);
+//   });
+// });
 
-app.delete("/delete", (req, res) => {
-  db.query("DELETE FROM sensor", (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send("Internal Server Error");
-    } else {
-      res.send(result);
-    }
-  });
-});
+// app.delete("/delete", (req, res) => {
+//   db.query("DELETE FROM sensor", (err, result) => {
+//     if (err) {
+//       console.log(err);
+//       res.status(500).send("Internal Server Error");
+//     } else {
+//       res.send(result);
+//     }
+//   });
+// });
 
 
 
-// Handle Ctrl+C to close the database connection before exiting
-process.on('SIGINT', () => {
-  connection.end();
-  console.log('Disconnected from MySQL database');
-  process.exit();
-});
+// // Handle Ctrl+C to close the database connection before exiting
+// process.on('SIGINT', () => {
+//   connection.end();
+//   console.log('Disconnected from MySQL database');
+//   process.exit();
+// });
 
 let onoff = true;
 
