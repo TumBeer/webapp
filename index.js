@@ -198,7 +198,8 @@ wss.on('connection', function connection(ws) {
 
 
 
-const PORT = 4000;
-server.listen(PORT, () => console.log("Lisening on port : ", PORT))
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, 'websocket-v2jj.onrender.com', () => console.log("Lisening on port : ", PORT))
+
 
 
