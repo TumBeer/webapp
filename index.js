@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const mysql = require("mysql2");
 const cors = require("cors");
 const path = require('path');
+const { parse } = require('url');
 
 app.use(cors());
 app.use(express.json());
@@ -17,83 +18,84 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './client/build/index.html'));
 });
 
-const wss = new WebSocket.Server({ server:server });
+const wss1 = new WebSocket.Server({ noServer: true });
+const wss2 = new WebSocket.Server({ noServer: true });
 
-// const db = mysql.createConnection({
-//   user: "root",
-//   host: "localhost",
-//   password: "setkit",
-//   database: "sensor_data",
-// });
+const db = mysql.createConnection({
+  user: "root",
+  host: "localhost",
+  password: "setkit",
+  database: "sensor_data",
+});
 
-// // const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
-// const insertData = (temperature, voltage) => {
+// const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
+const insertData = (temperature, voltage) => {
 
-//   const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
-//   db.query(insertQuery, [temperature, voltage], (err, results) => {
-//     if (err) {
-//       console.error('Error inserting data:', err);
-//       return;
-//     }
-//     console.log('Data inserted successfully, insertId =', results.insertId);
-//   });
-// };
+  const insertQuery = 'INSERT INTO sensor (temperature, voltage) VALUES (?, ?)';
+  db.query(insertQuery, [temperature, voltage], (err, results) => {
+    if (err) {
+      console.error('Error inserting data:', err);
+      return;
+    }
+    console.log('Data inserted successfully, insertId =', results.insertId);
+  });
+};
 
-// app.get("/dataAmount", (req, res) => {
-//   db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
-//     if (err) {
-//       console.log('Error connecting to MySQL database:', err);
-//       res.sendStatus(500); // Send Internal Server Error status
-//     } else {
-//       // Check if there is any result
-//       if (result.length > 0) {
-//         res.send(result);
-//       } else {
-//         res.sendStatus(404); // Send Not Found status
-//       }
-//     }
-//     dataCount = result[0]['COUNT(*)']
-//     console.log(dataCount);
-//   });
-// });
+app.get("/dataAmount", (req, res) => {
+  db.query("SELECT COUNT(*) FROM sensor", (err, result) => {
+    if (err) {
+      console.log('Error connecting to MySQL database:', err);
+      res.sendStatus(500); // Send Internal Server Error status
+    } else {
+      // Check if there is any result
+      if (result.length > 0) {
+        res.send(result);
+      } else {
+        res.sendStatus(404); // Send Not Found status
+      }
+    }
+    dataCount = result[0]['COUNT(*)']
+    console.log(dataCount);
+  });
+});
 
-// app.get("/data50", (req, res) => {
-//   db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
-//     if (err) {
-//       console.log('Error connecting to MySQL database:', err);
-//       res.sendStatus(500); // Send Internal Server Error status
-//     } else {
-//       // Check if there is any result
-//       if (result.length > 0) {
-//         res.send(result);
-//       } else {
-//         res.sendStatus(404); // Send Not Found status
-//       }
-//     }
-//     console.log('Connected to MySQL database');
-//     console.log("50 Data: ", result);
-//   });
-// });
+app.get("/data50", (req, res) => {
+  db.query("SELECT * FROM sensor ORDER BY id DESC LIMIT 50", (err, result) => {
+    if (err) {
+      console.log('Error connecting to MySQL database:', err);
+      res.sendStatus(500); // Send Internal Server Error status
+    } else {
+      // Check if there is any result
+      if (result.length > 0) {
+        res.send(result);
+      } else {
+        res.sendStatus(404); // Send Not Found status
+      }
+    }
+    console.log('Connected to MySQL database');
+    console.log("50 Data: ", result);
+  });
+});
 
-// app.delete("/delete", (req, res) => {
-//   db.query("DELETE FROM sensor", (err, result) => {
-//     if (err) {
-//       console.log(err);
-//       res.status(500).send("Internal Server Error");
-//     } else {
-//       res.send(result);
-//     }
-//   });
-// });
+app.delete("/delete", (req, res) => {
+  db.query("DELETE FROM sensor", (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Internal Server Error");
+    } else {
+      res.send(result);
+    }
+  });
+});
 
 
 
-// // Handle Ctrl+C to close the database connection before exiting
-// process.on('SIGINT', () => {
-//   connection.end();
-//   console.log('Disconnected from MySQL database');
-//   process.exit();
-// });
+// Handle Ctrl+C to close the database connection before exiting
+process.on('SIGINT', () => {
+  connection.end();
+  console.log('Disconnected from MySQL database');
+  process.exit();
+});
 
 let onoff = true;
 
@@ -140,14 +142,27 @@ app.post("/switch_4", (req, res) => {
   res.send(JSON.stringify({command: switch_4}));
 });
 
-wss.on('connection', function connection(ws) {
+const users = new Set();
+let ID = 0;
+
+wss1.on("connection", function connection(socket) {
+  console.log("wss1:: User connected");
+  const userRef = {
+    id: ID,
+    socket: socket,
+    connectionDate: Date.now(),
+  };
+  users.add(userRef);
+  console.log("Adding to User ", Array.from(users)[ID].id);
+  ID += 1;
+});
+
+wss2.on('connection', function connection(ws) {
   ws.on('error', console.error);
   console.log('A new client Connected!');
   // ws.send('Welcome New Client!');
 
   ws.on('message', function incoming(message) {
-    let receivedValue;
-  
     try {
       // Check if the message is a Blob
       if (message instanceof Blob) {
@@ -169,24 +184,37 @@ wss.on('connection', function connection(ws) {
       return; // Return early to avoid sending an undefined value
     }
   
-    // Now you can use `receivedValue` outside the try block
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        const message = {
-          temperature: temperature,
-          voltage: voltage,
-          command: onoff,
-          switch_1: switch_1,
-          switch_2: switch_2,
-          switch_3: switch_3,
-          switch_4: switch_4
-        };
+    // // Now you can use `receivedValue` outside the try block
+    // wss1.clients.forEach(function each(client) {
+    //   if (client.readyState === WebSocket.OPEN) {
+    //     const message = {
+    //       temperature: temperature,
+    //       voltage: voltage,
+    //       command: onoff,
+    //       switch_1: switch_1,
+    //       switch_2: switch_2,
+    //       switch_3: switch_3,
+    //       switch_4: switch_4
+    //     };
     
-        console.log("Sent to Client:", message);
-        client.send(JSON.stringify(message));
-      }
-    });
-  
+    //     console.log("Sent to Client:", message);
+    //     client.send(JSON.stringify(message));
+    //   }
+    // });
+
+    const message2 = {
+      temperature: temperature,
+      voltage: voltage,
+      command: onoff,
+      switch_1: switch_1,
+      switch_2: switch_2,
+      switch_3: switch_3,
+      switch_4: switch_4
+    };
+    
+    // ws.send(JSON.stringify(message2));
+    sendMessage(JSON.stringify(message2));
+
     // You can also send a response to the original sender if needed
     // ws.send('Got user message');
   });
@@ -194,12 +222,34 @@ wss.on('connection', function connection(ws) {
 
 // app.get('/', (req, res) => res.send('Hello World!'))
 
+server.on("upgrade", function upgrade(request, socket, head) {
+  const { pathname } = parse(request.url);
+  console.log(`Path name ${pathname}`);
+
+  if (pathname === "/receive") {
+    wss1.handleUpgrade(request, socket, head, function done(ws) {
+      wss1.emit("connection", ws, request);
+    });
+  } else if (pathname === "/send") {
+    wss2.handleUpgrade(request, socket, head, function done(ws) {
+      wss2.emit("connection", ws, request);
+    });
+  } else {
+    socket.destroy();
+  }
+});
 
 
+const sendMessage = (message) => {
+  // console.log("Sending messages to users!");
+  for (const user of users) {
+    user.socket.send(message);
+  }
+};
 
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("Lisening on port : ", PORT));
-
+server.listen(PORT, () => console.log(`Lisening on port :3000`));
+// server.listen(3000, () => console.log(`Lisening on port :3000`));
 
 
