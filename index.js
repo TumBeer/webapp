@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const server = require('http').createServer(app);
 const WebSocket = require('ws');
-const mysql = require("mysql2");
+// const mysql = require("mysql2");
 const cors = require("cors");
 const path = require('path');
 const { parse } = require('url');
@@ -21,12 +21,12 @@ app.get('/', (req, res) => {
 const wss1 = new WebSocket.Server({ noServer: true });
 const wss2 = new WebSocket.Server({ noServer: true });
 
-const db = mysql.createConnection({
-  user: "root",
-  host: "localhost",
-  password: "setkit",
-  database: "sensor_data",
-});
+// const db = mysql.createConnection({
+//   user: "root",
+//   host: "localhost",
+//   password: "setkit",
+//   database: "sensor_data",
+// });
 
 // // const randomValue = Math.floor(Math.random() * 100); // Replace with your logic to generate random numbers
 // const insertData = (temperature, voltage) => {
